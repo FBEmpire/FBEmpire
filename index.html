@@ -49,13 +49,30 @@
             filter: brightness(0.6);
         }
         
+        /* Основное свечение под текстом */
+        .text-glow {
+            position: absolute;
+            width: 80%;
+            height: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(
+                ellipse at center,
+                rgba(0, 180, 255, 0.3) 0%,
+                transparent 70%
+            );
+            z-index: 1;
+            animation: glow-pulse 4s ease infinite alternate;
+            border-radius: 50%;
+        }
+        
         .snowflakes {
             position: absolute;
             width: 100%;
             height: 100%;
             z-index: 3;
             pointer-events: none;
-            will-change: transform;
         }
         
         .snowflake {
@@ -64,14 +81,30 @@
             border-radius: 50%;
             opacity: 0;
             filter: 
-                drop-shadow(0 0 3px #00b7ff)
-                drop-shadow(0 0 6px #0077ff)
-                blur(0.8px);
+                drop-shadow(0 0 2px #00b7ff)
+                drop-shadow(0 0 4px #0077ff)
+                blur(0.5px);
             animation: 
                 snowflake-fall linear infinite,
                 snowflake-flicker ease-in-out infinite;
             z-index: 3;
-            will-change: transform, opacity;
+        }
+        
+        /* Свечение под снежинками */
+        .snowflake::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(
+                to bottom,
+                rgba(0, 150, 255, 0.2),
+                transparent
+            );
+            transform: translateX(-50%);
+            filter: blur(1px);
         }
         
         .logo-text {
@@ -115,49 +148,9 @@
             filter: drop-shadow(0 0 2px #003366);
         }
 
-        .glow-layer {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(
-                circle at center,
-                rgba(0, 180, 255, 0.35) 0%,
-                transparent 70%
-            );
-            z-index: 1;
-            animation: glow-pulse 4s ease infinite alternate;
-        }
-
-        .light-spots {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            z-index: 2;
-            pointer-events: none;
-        }
-
-        .light-spot {
-            position: absolute;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(
-                circle,
-                rgba(0, 200, 255, 0.25) 0%,
-                transparent 70%
-            );
-            border-radius: 50%;
-            animation: light-pulse 3s ease infinite alternate;
-            will-change: transform, opacity;
-        }
-
         @keyframes glow-pulse {
-            0% { opacity: 0.5; transform: scale(1); }
-            100% { opacity: 0.8; transform: scale(1.05); }
-        }
-
-        @keyframes light-pulse {
-            0%, 100% { opacity: 0.4; transform: scale(0.8); }
-            50% { opacity: 0.6; transform: scale(1); }
+            0% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); }
         }
 
         @keyframes neon-flicker {
@@ -202,8 +195,7 @@
 <body>
     <div class="logo-container">
         <div class="background"></div>
-        <div class="glow-layer"></div>
-        <div class="light-spots" id="light-spots"></div>
+        <div class="text-glow"></div>
         <div class="snowflakes" id="snowflakes"></div>
         <div class="logo-text">
             <span class="neon-tube" data-text="FBEmpire">FBEmpire</span>
@@ -211,66 +203,34 @@
     </div>
 
     <script>
-        // Оптимизированное создание элементов
-        const lightSpotsContainer = document.getElementById('light-spots');
+        // Создание снежинок
         const snowflakesContainer = document.getElementById('snowflakes');
-        const elementCount = window.innerWidth < 768 ? 80 : 150;
+        const snowflakeCount = window.innerWidth < 768 ? 80 : 150;
         
-        // Предварительное создание CSS для анимации
-        const style = document.createElement('style');
-        document.head.appendChild(style);
-        
-        for (let i = 0; i < elementCount; i++) {
-            // Параметры для каждого элемента
-            const posX = Math.random() * 100;
-            const posY = Math.random() * 100;
-            const size = Math.random() * 100 + 100;
-            const duration = Math.random() * 4 + 2;
-            const delay = Math.random() * 5;
-            const snowflakeSize = Math.random() * 8 + 4;
-            const snowflakeY = Math.random() * -100;
+        for (let i = 0; i < snowflakeCount; i++) {
+            const snowflake = document.createElement('div');
+            snowflake.classList.add('snowflake');
+            
+            const size = Math.random() * 6 + 3;
+            const startX = Math.random() * 100;
+            const startY = Math.random() * -100;
             const opacity = Math.random() * 0.5 + 0.3;
             const fallDuration = Math.random() * 15 + 10;
             const flickerSpeed = Math.random() * 3 + 2;
-            const startX = posX + Math.random() * 20 - 10;
+            const delay = Math.random() * 10;
             
-            // Создаем световые пятна
-            const lightSpot = document.createElement('div');
-            lightSpot.classList.add('light-spot');
-            lightSpot.style.cssText = `
+            snowflake.style.cssText = `
                 width: ${size}px;
                 height: ${size}px;
-                left: ${posX}%;
-                top: ${posY}%;
-                animation: light-pulse ${duration}s ease ${delay}s infinite alternate;
-            `;
-            lightSpotsContainer.appendChild(lightSpot);
-            
-            // Создаем снежинки
-            const snowflake = document.createElement('div');
-            snowflake.classList.add('snowflake');
-            snowflake.style.cssText = `
-                width: ${snowflakeSize}px;
-                height: ${snowflakeSize}px;
                 left: ${startX}%;
-                top: ${snowflakeY}%;
+                top: ${startY}%;
                 opacity: ${opacity};
                 animation: 
                     snowflake-fall ${fallDuration}s linear ${delay}s infinite,
                     snowflake-flicker ${flickerSpeed}s ease-in-out ${delay}s infinite;
             `;
+            
             snowflakesContainer.appendChild(snowflake);
-        }
-
-        // Оптимизация анимации
-        if ('requestIdleCallback' in window) {
-            window.requestIdleCallback(() => {
-                document.body.classList.add('animate');
-            });
-        } else {
-            setTimeout(() => {
-                document.body.classList.add('animate');
-            }, 300);
         }
     </script>
 </body>
